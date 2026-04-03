@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Watchlist, Portfolio
 try:
     from tensorflow.keras.models import load_model
-except:
+except ImportError:
     load_model = None
 # ================= LOAD MODEL =================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -92,7 +92,7 @@ def dashboard(request):
         stock_data = yf.download(stock_symbol, period="1mo", progress=False)
         price = float(stock_data['Close'].iloc[-1])
     except Exception as e:
-        print("Yahoo Finance Error:", e)
+        print("Model Load Error:",e)
         price = 145.93  # fallback
 
     # ===== USER DATA =====
