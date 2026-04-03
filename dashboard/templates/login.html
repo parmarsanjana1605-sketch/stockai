@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - StockAI</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        /* Error message */
+        .error {
+            color: #ff4d4d;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Password eye */
+        .password-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-box input {
+            width: 100%;
+            padding-right: 45px;
+        }
+
+        .password-box span {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #aaa;
+            font-size: 18px;
+        }
+
+        .or {
+            text-align: center;
+            margin: 18px 0;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        .auth-link {
+            margin-top: 20px;
+            text-align: center;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .auth-link a {
+            color: #7c4dff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+
+        .login-right p {
+            color: #bbb;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .login-right h1 {
+            font-size: 34px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .login-right h3 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #fff;
+        }
+
+        .google-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fff;
+            color: #111;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .google-btn:hover {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <div class="login-container">
+        
+        <!-- LEFT IMAGE -->
+        <div class="login-left" style="background-image: url('{% static 'css/images/stock.jpg' %}');"></div>
+    
+        
+
+        <!-- RIGHT FORM -->
+        <div class="login-right">
+            <h1>Instant access to trading from comfort of your home</h1>
+            <p>Login to continue your stock prediction dashboard.</p>
+
+            <h3>Login</h3>
+
+            <!-- ERROR MESSAGE -->
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <label>Username / Email</label>
+                <input type="text" name="username" placeholder="Enter username or email" required>
+
+                <label>Password</label>
+                <div class="password-box">
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                    <span onclick="togglePassword()">👁️</span>
+                </div>
+
+                <button type="submit">Login</button>
+            </form>
+
+            <div class="or">OR</div>
+
+            <a href="/accounts/google/login/" class="google-btn">
+                Continue with Google
+            </a>
+
+            <p class="auth-link">
+                Don’t have an account?
+                <a href="/signup/">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            var pass = document.getElementById("password");
+            if (pass.type === "password") {
+                pass.type = "text";
+            } else {
+                pass.type = "password";
+            }
+        }
+    </script>
+
+</body>
+</html>

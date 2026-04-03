@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockAI Dashboard</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-body">
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="logo">StockAI</h2>
+
+        <ul class="menu">
+            <li class="active">Dashboard</li>
+            <li>Portfolio</li>
+            <li>Trading & Market</li>
+            <li>Research Portal</li>
+            <li>Wallet Transfer</li>
+            <li>Reports</li>
+            <li>Tutorial</li>
+            <li><a href="/logout/">Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <h2>Hello {{ request.user.username }} 👋</h2>
+            <input type="text" placeholder="Search stocks...">
+        </div>
+
+        <!-- LIVE PRICE -->
+        <div class="live-price">
+            Live Stock Price : <strong>${{ price|default:"0" }}</strong>
+        </div>
+
+        <!-- STOCK CARDS -->
+        <div class="cards">
+            <div class="card gradient1">
+                <h4>NVIDIA</h4>
+                <h2>$203.65</h2>
+            </div>
+
+            <div class="card gradient2">
+                <h4>META</h4>
+                <h2>$151.74</h2>
+            </div>
+
+            <div class="card gradient3">
+                <h4>TESLA</h4>
+                <h2>$177.90</h2>
+            </div>
+
+            <div class="card gradient4">
+                <h4>APPLE</h4>
+                <h2>$145.93</h2>
+            </div>
+        </div>
+
+        <!-- GRID -->
+        <div class="grid">
+
+            <!-- BALANCE -->
+            <div class="balance">
+                <h3>Total Balance</h3>
+                <h1>$14,032</h1>
+            </div>
+
+            <!-- INVESTED -->
+            <div class="invested">
+                <h3>Invested</h3>
+                <h1>$7,532</h1>
+            </div>
+
+            <!-- CHART -->
+            <div class="chart-box">
+                <h3>Stock Analytics</h3>
+                <canvas id="myChart"></canvas>
+            </div>
+
+            <!-- SNAPSHOT -->
+            <div class="snapshot">
+                <h3>Snapshot</h3>
+                <p>Open: {{ price|default:"0" }}</p>
+                <p>High: {{ lstm_prediction|default:"0" }}</p>
+                <p>Low: {{ gru_prediction|default:"0" }}</p>
+            </div>
+        </div>
+
+        <!-- PREDICTION SECTION -->
+        <div class="section">
+            <h3>Prediction</h3>
+
+            <form method="POST" action="/predict/">
+                {% csrf_token %}
+                <input type="text" name="data" placeholder="Enter stock value (ex: 145.93)" required>
+                <button type="submit">Predict</button>
+            </form>
+
+            <div class="prediction-box">
+                <h4>LSTM Prediction: <span>${{ lstm_prediction|default:"0" }}</span></h4>
+                <h4>GRU Prediction: <span>${{ gru_prediction|default:"0" }}</span></h4>
+            </div>
+        </div>
+
+        <!-- WATCHLIST -->
+        <div class="section">
+            <h3>Your Watchlist</h3>
+
+            <form method="POST" action="/predict/">
+                {% csrf_token %}
+                <input type="text" name="stock" placeholder="Enter stock name (ex: TSLA)">
+                <button type="submit">Add</button>
+            </form>
+
+            <ul>
+                {% for stock in watchlist %}
+                    <li>{{ stock.stock_name }}</li>
+                {% empty %}
+                    <li>No stock added</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- PORTFOLIO -->
+        <div class="section">
+            <h3>Your Portfolio</h3>
+
+            <ul>
+                {% for stock in portfolio %}
+                    <li>
+                        {{ stock.stock_name }} |
+                        Qty: {{ stock.quantity }} |
+                        Buy Price: {{ stock.buy_price }}
+                    </li>
+                {% empty %}
+                    <li>No portfolio data</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </main>
+</div>
+
+<!-- CHART SCRIPT -->
+<script>
+    const chartValues = {{ chart_data|safe }};
+    const ctx = document.getElementById('myChart');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Live Price', 'LSTM', 'GRU'],
+            datasets: [{
+                label: 'Stock Prediction',
+                data: chartValues,
+                borderColor: '#7c4dff',
+                backgroundColor: 'rgba(124,77,255,0.2)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#34e89e',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+
+</body>
+</html>
