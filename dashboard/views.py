@@ -11,10 +11,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 from .models import Watchlist, Portfolio
+
 try:
     from tensorflow.keras.models import load_model
 except ImportError:
     load_model = None
+
+
 # ================= LOAD MODEL =================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,10 +31,11 @@ lstm_model = None
 gru_model = None
 
 try:
-    if os.path.exists(lstm_path):
-        lstm_model = load_model(lstm_path)
-    if os.path.exists(gru_path):
-        gru_model = load_model(gru_path)
+    if load_model:
+        if os.path.exists(lstm_path):
+            lstm_model = load_model(lstm_path)
+        if os.path.exists(gru_path):
+            gru_model = load_model(gru_path)
 except Exception as e:
     print("Model Load Error:", e)
 
@@ -89,10 +93,27 @@ def dashboard(request):
 
     # ===== LIVE STOCK PRICE =====
     try:
-        stock_data = yf.download(stock_symbol, period="1mo", progress=False)
-        price = float(stock_data['Close'].iloc[-1])
+        stock_data = yf.download(stock_symbol, period="1mo", progress=False, auto_adjust=True)
+
+        if stock_data.empty:
+            raise ValueError("No stock data found")
+
+        close_data = stock_data["Close"]
+
+        # Handle case where Close is Series or DataFrame
+        if hasattr(close_data, "iloc"):
+            last_close = close_data.iloc[-1]
+
+            # If still Series, take first value
+            if hasattr(last_close, "iloc"):
+                last_close = last_close.iloc[0]
+
+            price = float(last_close)
+        else:
+            price = 145.93
+
     except Exception as e:
-        print("Model Load Error:",e)
+        print("Stock Price Error:", e)
         price = 145.93  # fallback
 
     # ===== USER DATA =====
@@ -120,8 +141,8 @@ def dashboard(request):
             try:
                 user_input = float(user_input)
 
-                if lstm_model and gru_model:
-                    input_data = np.array([[user_input]])
+                if lstm_model is not None and gru_model is not None:
+                    input_data = np.array([[user_input]], dtype=np.float32)
                     input_data = np.reshape(input_data, (1, 1, 1))
 
                     lstm_prediction = round(float(lstm_model.predict(input_data, verbose=0)[0][0]), 2)
