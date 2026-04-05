@@ -55,6 +55,10 @@ body {
     background-repeat: no-repeat;
 }
 
+.login-left {
+    background-image: url("/static/css/images/stock.jpg");
+}
+
 .signup-left{
     background-image: url("/static/imges/stock.jpg");
 }
