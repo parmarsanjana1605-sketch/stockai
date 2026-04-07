@@ -1,11 +1,14 @@
-/* ===== GLOBAL ===== */
+/* ================= GLOBAL ================= */
 :root {
     --primary: #34e89e;
     --secondary: #7c4dff;
-    --dark: #08080a;
+    --dark: #0f0f14;
     --card-bg: #1a1a24;
     --text-light: #ffffff;
     --text-muted: #bdbdbd;
+    --danger: #ff4d4d;
+    --warning: #f9d423;
+    --success: #34e89e;
 }
 
 * {
@@ -15,13 +18,16 @@
     font-family: 'Segoe UI', sans-serif;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    background: #0f0f14;
-    color: #fff;
+    background: var(--dark);
+    color: var(--text-light);
 }
 
 /* ================= LOGIN & SIGNUP ================= */
-
 .login-body,
 .signup-body {
     min-height: 100vh;
@@ -32,7 +38,6 @@ body {
     padding: 20px;
 }
 
-/* Separate container for login/signup only */
 .login-container,
 .signup-container {
     display: flex;
@@ -46,7 +51,6 @@ body {
     backdrop-filter: blur(10px);
 }
 
-/* Left side image */
 .login-left,
 .signup-left {
     flex: 1.2;
@@ -59,13 +63,10 @@ body {
     background-image: url("/static/css/images/stock.jpg");
 }
 
-.signup-left{
-    background-image: url("/static/imges/stock.jpg");
+.signup-left {
+    background-image: url("/static/css/images/stock.jpg");
 }
 
-
-
-/* Right form side */
 .login-right,
 .signup-right {
     flex: 1;
@@ -89,7 +90,6 @@ body {
     line-height: 1.6;
 }
 
-/* Inputs */
 input {
     width: 100%;
     padding: 14px 16px;
@@ -107,7 +107,6 @@ input:focus {
     box-shadow: 0 0 10px rgba(52, 232, 158, 0.2);
 }
 
-/* Buttons */
 button {
     width: 100%;
     padding: 14px;
@@ -149,24 +148,19 @@ button:hover {
 }
 
 /* ================= DASHBOARD ================= */
-
 .dashboard-body {
     min-height: 100vh;
     width: 100%;
     background: #0f0f14;
 }
 
-/* Main dashboard layout */
 .container {
     display: flex;
     width: 100%;
     min-height: 100vh;
 }
 
-.main {
-  flex: 1;
-}
-/* ===== SIDEBAR ===== */
+/* ================= SIDEBAR ================= */
 .sidebar {
     width: 250px;
     min-height: 100vh;
@@ -177,6 +171,7 @@ button:hover {
     left: 0;
     overflow-y: auto;
     z-index: 1000;
+    border-right: 1px solid rgba(255,255,255,0.05);
 }
 
 .logo {
@@ -211,7 +206,7 @@ button:hover {
     display: block;
 }
 
-/* ===== MAIN CONTENT ===== */
+/* ================= MAIN ================= */
 .main {
     margin-left: 250px;
     width: calc(100% - 250px);
@@ -219,26 +214,40 @@ button:hover {
     overflow-x: hidden;
 }
 
-/* ===== TOPBAR ===== */
 .topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
+    margin-bottom: 10px;
 }
 
 .topbar h2 {
     font-size: 28px;
+    margin-bottom: 5px;
 }
 
-.topbar input {
-    max-width: 320px;
-    background: #1a1a24;
-    border: 1px solid #2c2c38;
+.topbar p {
+    color: var(--text-muted);
 }
 
-/* ===== LIVE PRICE ===== */
+.logout-btn {
+    background: #6366f1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+}
+
+/* ================= LIVE PRICE ================= */
 .live-price {
     margin-top: 20px;
     background: #1a1a24;
@@ -246,9 +255,48 @@ button:hover {
     border-radius: 14px;
     font-size: 18px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* ===== STOCK CARDS ===== */
+.live-status,
+#live-status {
+    margin-left: 12px;
+    font-size: 14px;
+    color: #34e89e;
+    font-weight: bold;
+}
+
+/* ================= QUICK STOCK BUTTONS ================= */
+.quick-stocks,
+.quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.quick-stocks button,
+.quick-buttons button,
+.mini-btn {
+    background: #1f2937;
+    color: white;
+    border: 1px solid #333;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    width: auto;
+    margin-top: 0;
+}
+
+.quick-stocks button:hover,
+.quick-buttons button:hover,
+.mini-btn:hover {
+    background: #7c4dff;
+    transform: translateY(-2px);
+}
+
+/* ================= CARDS ================= */
 .cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -262,6 +310,8 @@ button:hover {
     color: #fff;
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     transition: 0.3s;
+    position: relative;
+    overflow: hidden;
 }
 
 .card:hover {
@@ -296,7 +346,56 @@ button:hover {
     color: #000;
 }
 
-/* ===== GRID ===== */
+/* ================= STATUS BADGES ================= */
+.status {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+.status.live {
+    background: rgba(52, 232, 158, 0.15);
+    color: #34e89e;
+}
+
+.status.fallback {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.signal-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 13px;
+    min-width: 72px;
+    text-align: center;
+}
+
+.buy,
+.signal-badge.buy {
+    background: rgba(52, 232, 158, 0.15);
+    color: #34e89e;
+}
+
+.sell,
+.signal-badge.sell {
+    background: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+}
+
+.hold,
+.signal-badge.hold {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+/* ================= GRID ================= */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -307,12 +406,14 @@ button:hover {
 .balance,
 .invested,
 .chart-box,
-.snapshot {
+.snapshot,
+.section,
+.prediction-box {
     padding: 25px;
     border-radius: 18px;
     background: #1a1a24;
-    min-height: 220px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.04);
 }
 
 .balance {
@@ -335,24 +436,33 @@ button:hover {
     font-size: 38px;
 }
 
-/* ===== CHART ===== */
+/* ================= CHART BOX ================= */
 .chart-box {
     height: 350px;
+    background: rgba(255,255,255,0.04);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    min-height: 350px;
+    position: relative;
 }
 
 .chart-box canvas {
     margin-top: 10px;
     width: 100% !important;
-    height: 250px !important;
+    height: 280px !important;
 }
 
-/* ===== SECTION ===== */
+/* ================= SNAPSHOT ================= */
+.snapshot p {
+    margin: 10px 0;
+    color: #ddd;
+    line-height: 1.6;
+}
+
+/* ================= SECTIONS ================= */
 .section {
     margin-top: 25px;
-    padding: 25px;
-    background: #1a1a24;
-    border-radius: 18px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .section h3 {
@@ -391,11 +501,9 @@ button:hover {
     line-height: 1.6;
 }
 
-/* ===== PREDICTION BOX ===== */
+/* ================= PREDICTION BOX ================= */
 .prediction-box {
     margin-top: 20px;
-    padding: 20px;
-    border-radius: 14px;
     background: #111827;
     border: 1px solid rgba(255,255,255,0.05);
 }
@@ -410,26 +518,137 @@ button:hover {
     font-weight: bold;
 }
 
-/* ===== GOOGLE LOGIN PAGE ===== */
-body.google-login-page {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-                url('/static/css/images/google.jpg') no-repeat center/cover;
+/* ================= WATCHLIST / PORTFOLIO / HISTORY ================= */
+.pro-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 15px;
 }
 
-.google-container {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 40px;
-    border-radius: 15px;
-    text-align: center;
-    width: 350px;
+.pro-list li {
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    color: #ddd;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.delete-btn {
+    background: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.delete-btn:hover {
+    background: #ff5252;
+    color: white;
+}
+
+.portfolio-total {
+    margin: 15px 0;
+    padding: 14px 18px;
+    background: rgba(52, 232, 158, 0.08);
+    border: 1px solid rgba(52, 232, 158, 0.2);
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* ================= ERROR ================= */
+.error-msg,
+.error-text {
+    color: var(--danger);
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.error-box {
+    border: 1px solid rgba(255, 82, 82, 0.25);
+    color: #ff8a8a;
+    background: rgba(255, 77, 77, 0.08);
+}
+
+/* ================= LOADER ================= */
+.loader-box {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 18px;
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.loader {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top: 3px solid #34e89e;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #1a1a24 25%, #2b2b3a 50%, #1a1a24 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.3s infinite;
+    border-radius: 10px;
+}
+
+.skeleton-line {
+    height: 18px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.skeleton-line.short {
+    width: 60%;
+}
+
+.skeleton-card {
+    height: 140px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================= UTILITY ================= */
+.green {
+    color: #34e89e !important;
+}
+
+.red {
+    color: #ff5252 !important;
 }
 
 /* ================= RESPONSIVE ================= */
-
 @media (max-width: 1100px) {
     .cards {
         grid-template-columns: repeat(2, 1fr);
@@ -441,8 +660,8 @@ body.google-login-page {
 
     .login-container,
     .signup-container {
-        flex-direction: column; 
-        width:100%;
+        flex-direction: column;
+        width: 100%;
         height: auto;
     }
 
@@ -478,11 +697,6 @@ body.google-login-page {
         align-items: flex-start;
     }
 
-    .topbar input {
-        width: 100%;
-        max-width: 100%;
-    }
-
     .login-right,
     .signup-right {
         padding: 30px 20px;
@@ -491,5 +705,79 @@ body.google-login-page {
     .login-right h1,
     .signup-right h1 {
         font-size: 30px;
+    }
+
+    .section form {
+        flex-direction: column;
+    }
+
+    .section form input,
+    .section form button {
+        width: 100%;
+    }
+
+    .chart-box {
+        height: auto;
+        min-height: 320px;
+    }
+
+    .chart-box canvas {
+        height: 250px !important;
+    }
+
+    .quick-stocks,
+    .quick-buttons {
+        gap: 8px;.market-status-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1a1a24;
+    padding: 12px 18px;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.market-status-box h4 {
+    margin: 0;
+    font-size: 15px;
+    color: #fff;
+}
+
+.market-status-box p {
+    margin: 0;
+    font-size: 13px;
+    color: #34e89e;
+}
+
+.market-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #34e89e;
+    box-shadow: 0 0 10px #34e89e;
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+    }
+
+    .quick-stocks button,
+    .quick-buttons button,
+    .mini-btn {
+        width: 100%;
     }
 }

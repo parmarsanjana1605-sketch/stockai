@@ -5,170 +5,254 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockAI Dashboard</title>
-
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{%static 'favicon.ico'%}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dashboard-body">
 
 <div class="container">
-
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-        <h2 class="logo">StockAI</h2>
-
+        <h1 class="logo">📈 StockAI</h1>
         <ul class="menu">
-            <li class="active">Dashboard</li>
-            <li>Portfolio</li>
-            <li>Trading & Market</li>
-            <li>Research Portal</li>
-            <li>Wallet Transfer</li>
-            <li>Reports</li>
-            <li>Tutorial</li>
-            <li><a href="/logout/">Logout</a></li>
+            <li class="active"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="#watchlist">Watchlist</a></li>
+            <li><a href="#portfolio">Portfolio</a></li>
+            <li><a href="#prediction">Prediction</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
         </ul>
     </aside>
 
-    <!-- MAIN -->
     <main class="main">
-
-        <!-- TOPBAR -->
         <div class="topbar">
-            <h2>Hello {{ request.user.username }} 👋</h2>
-            <input type="text" placeholder="Search stocks...">
+            <div>
+                <h2>Hello Sanjana 👋</h2>
+                <p>Welcome back to your stock analytics dashboard</p>
+            </div>
+            <div class="market-status-box">
+                <span class="market-dot"></span>
+                <div>
+                <h4>AI Prediction</h4>
+                <p> Model Active & Running</p>
+                </div>
+            </div>
         </div>
 
-        <!-- LIVE PRICE -->
-        <div class="live-price">
-            Live Stock Price : <strong>${{ price|default:"0" }}</strong>
+        <!-- LIVE STOCK PRICE -->
+        <div class="live-price" id="live-price-box">
+            🔴 Live Stock Price:
+            <strong id="live-price-symbol">{{ ticker|default:"RELIANCE.NS" }}</strong> =
+            ₹<span id="live-price">{{ latest_price|default:price }}</span>
+            <small id="live-status">{{ main_status|default:"Updating..." }}</small>
         </div>
 
-        <!-- STOCK CARDS -->
+        <!-- QUICK STOCK BUTTONS -->
+        <div class="quick-stocks">
+            <button type="button" onclick="quickSearch('RELIANCE.NS')">RELIANCE.NS</button>
+            <button type="button" onclick="quickSearch('TCS.NS')">TCS.NS</button>
+            <button type="button" onclick="quickSearch('INFY.NS')">INFY.NS</button>
+            <button type="button" onclick="quickSearch('AAPL')">AAPL</button>
+            <button type="button" onclick="quickSearch('TSLA')">TSLA</button>
+        </div>
+
+        <!-- LIVE TICKER CARDS -->
         <div class="cards">
             <div class="card gradient1">
-                <h4>NVIDIA</h4>
-                <h2>$203.65</h2>
+                <h4>AAPL</h4>
+                <h2 id="aaplPrice">${{ aapl_price }}</h2>
+                <p id="aaplStatus" class="status {{ aapl_status }}">{{ aapl_status|upper }}</p>
             </div>
-
             <div class="card gradient2">
-                <h4>META</h4>
-                <h2>$151.74</h2>
+                <h4>RELIANCE.NS</h4>
+                <h2 id="reliancePrice">₹{{ reliance_price }}</h2>
+                <p id="relianceStatus" class="status {{ reliance_status }}">{{ reliance_status|upper }}</p>
             </div>
-
             <div class="card gradient3">
-                <h4>TESLA</h4>
-                <h2>$177.90</h2>
+                <h4>TCS.NS</h4>
+                <h2 id="tcsPrice">₹{{ tcs_price }}</h2>
+                <p id="tcsStatus" class="status {{ tcs_status }}">{{ tcs_status|upper }}</p>
             </div>
-
             <div class="card gradient4">
-                <h4>APPLE</h4>
-                <h2>$145.93</h2>
+                <h4>INFY.NS</h4>
+                <h2 id="infyPrice">₹{{ infy_price }}</h2>
+                <p id="infyStatus" class="status {{ infy_status }}">{{ infy_status|upper }}</p>
             </div>
         </div>
 
-        <!-- GRID -->
+        <!-- TOP ANALYTICS CARDS -->
+        <div class="cards">
+            <div class="card gradient1">
+                <h4>Current Price</h4>
+                <h2>₹{{ latest_price|default:price }}</h2>
+            </div>
+            <div class="card gradient2">
+                <h4>Predicted Price</h4>
+                <h2>₹{{ predicted_price|default:lstm_prediction }}</h2>
+            </div>
+            <div class="card gradient3">
+                <h4>Trend</h4>
+                <h2>{{ trend|default:"UP" }}</h2>
+            </div>
+            <div class="card gradient4">
+                <h4>Recommendation</h4>
+                <h2>{{ recommendation|default:"BUY" }}</h2>
+            </div>
+        </div>
+
+        <!-- SEARCH STOCK -->
+        <div class="section">
+            <h3>🔍 Search Real Stock (AJAX)</h3>
+            <form id="searchForm" onsubmit="searchStock(event)">
+                {% csrf_token %}
+                <input type="text" id="tickerInput" placeholder="Enter stock symbol (e.g. RELIANCE.NS / AAPL)" required>
+                <button type="submit">Search</button>
+            </form>
+
+            <div id="loader" class="loader-box" style="display:none;">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
+
+            <div id="searchError" class="prediction-box error-box" style="display:none;"></div>
+
+            <div id="stockResult" class="prediction-box" style="display:none;">
+                <h4>📊 <span id="resultSymbol">--</span> Analysis</h4>
+                <p><strong>Latest Price:</strong> <span id="resultLatest">--</span></p>
+                <p><strong>Previous Close:</strong> <span id="resultPrev">--</span></p>
+                <p><strong>High:</strong> <span id="resultHigh">--</span></p>
+                <p><strong>Low:</strong> <span id="resultLow">--</span></p>
+                <p><strong>Volume:</strong> <span id="resultVolume">--</span></p>
+                <hr style="margin:15px 0;">
+                <p><strong>Predicted Price:</strong> <span id="resultPredicted">--</span></p>
+                <p><strong>Trend:</strong> <span id="resultTrend">--</span></p>
+                <p><strong>Recommendation:</strong> <span id="resultReco" class="signal-badge">--</span></p>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
         <div class="grid">
-
-            <!-- BALANCE -->
-            <div class="balance">
-                <h3>Total Balance</h3>
-                <h1>$14,032</h1>
-            </div>
-
-            <!-- INVESTED -->
-            <div class="invested">
-                <h3>Invested</h3>
-                <h1>$7,532</h1>
-            </div>
-
-            <!-- CHART -->
             <div class="chart-box">
-                <h3>Stock Analytics</h3>
+                <h3>🤖 ML Prediction Comparison</h3>
                 <canvas id="myChart"></canvas>
             </div>
 
-            <!-- SNAPSHOT -->
-            <div class="snapshot">
-                <h3>Snapshot</h3>
-                <p>Open: {{ price|default:"0" }}</p>
-                <p>High: {{ lstm_prediction|default:"0" }}</p>
-                <p>Low: {{ gru_prediction|default:"0" }}</p>
+            <div class="chart-box">
+                <h3 id="liveChartTitle">{{ default_symbol }} Price Chart</h3>
+                <canvas id="liveChart"></canvas>
             </div>
         </div>
 
-        <!-- PREDICTION SECTION -->
+        <!-- STOCK SNAPSHOT -->
         <div class="section">
-            <h3>Prediction</h3>
-
-            <form method="POST" action="/predict/">
-                {% csrf_token %}
-                <input type="text" name="data" placeholder="Enter stock value (ex: 145.93)" required>
-                <button type="submit">Predict</button>
-            </form>
-
-            <div class="prediction-box">
-                <h4>LSTM Prediction: <span>${{ lstm_prediction|default:"0" }}</span></h4>
-                <h4>GRU Prediction: <span>${{ gru_prediction|default:"0" }}</span></h4>
-            </div>
+            <h3>📌 Stock Snapshot</h3>
+            {% if stock_data %}
+                <p><strong>Latest:</strong> ₹{{ stock_data.latest_price }}</p>
+                <p><strong>Prev Close:</strong> ₹{{ stock_data.previous_close }}</p>
+                <p><strong>High:</strong> ₹{{ stock_data.high }}</p>
+                <p><strong>Low:</strong> ₹{{ stock_data.low }}</p>
+                <p><strong>Volume:</strong> {{ stock_data.volume }}</p>
+            {% else %}
+                <p>No stock data yet.</p>
+            {% endif %}
         </div>
 
         <!-- WATCHLIST -->
-        <div class="section">
-            <h3>Your Watchlist</h3>
-
-            <form method="POST" action="/predict/">
+        <div class="section" id="watchlist">
+            <h3>⭐ Watchlist</h3>
+            <form method="POST" action="{% url 'add_watchlist' %}">
                 {% csrf_token %}
-                <input type="text" name="stock" placeholder="Enter stock name (ex: TSLA)">
+                <input type="text" name="stock" placeholder="Add stock to watchlist" required>
                 <button type="submit">Add</button>
             </form>
 
-            <ul>
-                {% for stock in watchlist %}
-                    <li>{{ stock.stock_name }}</li>
+            <ul class="pro-list">
+                {% for item in watchlist %}
+                    <li>
+                        <span>{{ item.stock_name }}</span>
+                        <div class="action-buttons">
+                            <button type="button" onclick="quickSearch('{{ item.stock_name }}')" class="mini-btn">Open</button>
+                            <a href="{% url 'delete_watchlist' item.id %}" class="delete-btn">Delete</a>
+                        </div>
+                    </li>
                 {% empty %}
-                    <li>No stock added</li>
+                    <li>No stocks in watchlist yet.</li>
                 {% endfor %}
             </ul>
         </div>
 
         <!-- PORTFOLIO -->
-        <div class="section">
-            <h3>Your Portfolio</h3>
+        <div class="section" id="portfolio">
+            <h3>💼 Portfolio</h3>
+            <form method="POST" action="{% url 'add_portfolio' %}">
+                {% csrf_token %}
+                <input type="text" name="stock_name" placeholder="Stock Symbol" required>
+                <input type="number" name="quantity" placeholder="Quantity" required>
+                <input type="number" step="0.01" name="buy_price" placeholder="Buy Price" required>
+                <button type="submit">Add Portfolio</button>
+            </form>
 
-            <ul>
-                {% for stock in portfolio %}
-                    <li>
-                        {{ stock.stock_name }} |
-                        Qty: {{ stock.quantity }} |
-                        Buy Price: {{ stock.buy_price }}
-                    </li>
+            <p><strong>Total Investment:</strong> ₹{{ portfolio_total }}</p>
+
+            <ul class="pro-list">
+                {% for item in portfolio %}
+                    <li>{{ item.stock_name }} - Qty: {{ item.quantity }} - Buy: ₹{{ item.buy_price }}</li>
                 {% empty %}
-                    <li>No portfolio data</li>
+                    <li>No portfolio data yet.</li>
                 {% endfor %}
             </ul>
         </div>
 
+        <!-- ML PREDICTION -->
+        <div class="section" id="prediction">
+            <h3>🤖 ML Prediction</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="number" step="0.01" name="data" placeholder="Enter stock price for ML prediction">
+                <button type="submit">Predict</button>
+            </form>
+
+            <ul>
+                <li>LSTM Prediction: <strong>₹{{ lstm_prediction }}</strong></li>
+                <li>GRU Prediction: <strong>₹{{ gru_prediction }}</strong></li>
+            </ul>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="section">
+            <h3>🕘 Prediction History</h3>
+            <ul class="pro-list">
+                {% for item in history %}
+                    <li>
+                        <span>
+                            {{ item.ticker }} → Latest: {{ item.latest_price }},
+                            Predicted: {{ item.predicted_price }},
+                            Trend: {{ item.trend }}
+                        </span>
+                        <span class="signal-badge {% if item.recommendation == 'BUY' %}buy{% elif item.recommendation == 'SELL' %}sell{% else %}hold{% endif %}">
+                            {{ item.recommendation }}
+                        </span>
+                    </li>
+                {% empty %}
+                    <li>No prediction history yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
     </main>
 </div>
 
-<!-- CHART SCRIPT -->
 <script>
-    const chartValues = {{ chart_data|safe }};
-    const ctx = document.getElementById('myChart');
-
-    new Chart(ctx, {
-        type: 'line',
+    // ML Prediction Chart
+    const predictionCtx = document.getElementById('myChart').getContext('2d');
+    new Chart(predictionCtx, {
+        type: 'bar',
         data: {
-            labels: ['Live Price', 'LSTM', 'GRU'],
+            labels: ['Current Price', 'LSTM Prediction', 'GRU Prediction'],
             datasets: [{
                 label: 'Stock Prediction',
-                data: chartValues,
-                borderColor: '#7c4dff',
-                backgroundColor: 'rgba(124,77,255,0.2)',
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#34e89e',
-                pointRadius: 5
+                data: JSON.parse('{{ chart_data|escapejs }}'),
+                backgroundColor: ['#34e89e', '#7c4dff', '#00cec9'],
+                borderRadius: 10
             }]
         },
         options: {
@@ -176,7 +260,148 @@
             maintainAspectRatio: false
         }
     });
+
+    // Live Stock Chart
+    const liveCtx = document.getElementById('liveChart').getContext('2d');
+    let liveChart = new Chart(liveCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ dates|escapejs }}'),
+            datasets: [{
+                label: '{{ default_symbol }}',
+                data: JSON.parse('{{ prices|escapejs }}'),
+                borderColor: '#34e89e',
+                backgroundColor: 'rgba(52, 232, 158, 0.15)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    function updateSignalBadge(el, value) {
+        el.classList.remove('buy', 'sell', 'hold');
+        if (value === 'BUY') el.classList.add('buy');
+        else if (value === 'SELL') el.classList.add('sell');
+        else el.classList.add('hold');
+    }
+
+    async function searchStock(event) {
+        if (event) event.preventDefault();
+
+        const symbol = document.getElementById("tickerInput").value.trim().toUpperCase();
+        if (!symbol) return;
+
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("stockResult").style.display = "none";
+        document.getElementById("searchError").style.display = "none";
+
+        try {
+            const response = await fetch(`/stock-search-api/?symbol=${symbol}`);
+            const data = await response.json();
+
+            document.getElementById("loader").style.display = "none";
+
+            if (!data.success) {
+                const errorBox = document.getElementById("searchError");
+                errorBox.style.display = "block";
+                errorBox.innerHTML = `<h4>❌ Error</h4><p>${data.error}</p>`;
+                return;
+            }
+
+            document.getElementById("stockResult").style.display = "block";
+            document.getElementById("resultSymbol").innerText = data.symbol;
+            document.getElementById("resultLatest").innerText = data.latest_price;
+            document.getElementById("resultPrev").innerText = data.previous_close;
+            document.getElementById("resultHigh").innerText = data.high;
+            document.getElementById("resultLow").innerText = data.low;
+            document.getElementById("resultVolume").innerText = data.volume;
+            document.getElementById("resultPredicted").innerText = data.predicted_price;
+            document.getElementById("resultTrend").innerText = data.trend;
+
+            const recoEl = document.getElementById("resultReco");
+            recoEl.innerText = data.recommendation;
+            updateSignalBadge(recoEl, data.recommendation);
+
+            document.getElementById("liveChartTitle").innerText = `${data.symbol} Price Chart`;
+
+            liveChart.data.labels = data.dates;
+            liveChart.data.datasets[0].label = data.symbol;
+            liveChart.data.datasets[0].data = data.prices;
+            liveChart.update();
+
+            currentSymbol = data.symbol;
+
+        } catch (error) {
+            document.getElementById("loader").style.display = "none";
+            const errorBox = document.getElementById("searchError");
+            errorBox.style.display = "block";
+            errorBox.innerHTML = `<h4>❌ Error</h4><p>Something went wrong. Try again.</p>`;
+        }
+    }
+
+    function quickSearch(symbol) {
+        document.getElementById("tickerInput").value = symbol;
+        searchStock();
+    }
+
+    async function updateLivePrice(symbol, elementId, statusId, currencySymbol) {
+        try {
+            const response = await fetch(`/live-stock-data/?symbol=${symbol}`);
+            const data = await response.json();
+
+            document.getElementById(elementId).innerText = currencySymbol + data.price;
+
+            const statusEl = document.getElementById(statusId);
+            statusEl.innerText = data.status.toUpperCase();
+            statusEl.classList.remove("live", "fallback");
+            statusEl.classList.add(data.status);
+
+        } catch (error) {
+            const statusEl = document.getElementById(statusId);
+            statusEl.innerText = "OFFLINE";
+            statusEl.classList.remove("live", "fallback");
+            statusEl.classList.add("fallback");
+        }
+    }
+
+    let currentSymbol = "{{ ticker|default:'RELIANCE.NS' }}";
+
+    async function updateMainLivePrice() {
+        try {
+            const response = await fetch(`/live-stock-data/?symbol=${currentSymbol}`);
+            const data = await response.json();
+
+            document.getElementById("live-price").innerText = data.price;
+            document.getElementById("live-price-symbol").innerText = data.symbol;
+            document.getElementById("live-status").innerText = data.status.toUpperCase();
+        } catch (error) {
+            document.getElementById("live-status").innerText = "OFFLINE";
+        }
+    }
+
+    function refreshAllPrices() {
+        updateLivePrice("AAPL", "aaplPrice", "aaplStatus", "$");
+        updateLivePrice("RELIANCE.NS", "reliancePrice", "relianceStatus", "₹");
+        updateLivePrice("TCS.NS", "tcsPrice", "tcsStatus", "₹");
+        updateLivePrice("INFY.NS", "infyPrice", "infyStatus", "₹");
+        updateMainLivePrice();
+    }
+
+    refreshAllPrices();
+    setInterval(refreshAllPrices, 5000);
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
